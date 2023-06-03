@@ -1,20 +1,27 @@
 #ifndef FS_CORE
 #define FS_CORE
 
-#include <cstdio>
+#include <filesystem>
+#include <fstream>
 #include <core.h>
+
+namespace fs = std::filesystem;
 
 using namespace core::types;
 
 class filesystem {
-private:
-    static u32 strlen(const _s8);
-
 public:
-    static inline u32 size_file(const _s8);
-    static inline _s8 read_file(const _s8);
-    static inline void write_file(const _s8, const _s8);
-    static inline void write_file_end(const _s8, const _s8);
+    static std::streampos file_size (const fs::path);
+    static const char *   file_read (const fs::path);
+    static void           file_write(const fs::path, const char *);
+
+    static fs::path get_app_data();
+    static fs::path get_tmp();
+    
+    static void file_remove(const fs::path);
+    static void file_copy(const fs::path, const fs::path);
+    static void file_move(const fs::path, const fs::path);
+    static void file_create(const fs::path);
 };
 
 #endif // FS_CORE
