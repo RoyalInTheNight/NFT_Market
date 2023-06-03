@@ -1,45 +1,65 @@
 #include <filesystem.h>
 
-static u32 filesystem::strlen(const _s8 buffer) {
-    const _s8 s;
+std::streampos filesystem::file_size(const fs::path file_path) {
+    std::ifstream file(file_path, std::ios_base::binary);
 
-    for (s = buffer; *s; s++);
-    return s = buffer;
-}
+    if (file.fail())
+        throw std::runtime_error("filesystem: file_open error\n");
 
-static u32 filesystem::size_file(const _s8 filename) {
-    FILE *file = fopen(filename, "rb");
+    std::streampos
 
-    u32 file_size = ftell(file);
-    fseek(file, 0, SEEK_END);
-    file_size = ftell(file) - file_size;
+    file_size = file.tellg();
+    file.seekg(0, std::ios::end);
+    file_size = file.tellg() - file_size;
 
-    fclose(file);
+    file.close();
 
     return file_size;
 }
 
-static _s8 filesystem::read_file(const _s8 filename) {
-    u32 file_size = this->size_file(filename);
-    FILE *file = fopen(filename, "rb");
+const char *filesystem::file_read(const fs::path file_path) {
+    std::streampos size_file = file_size(file_path);
+    std::ifstream  file(file_path, std::ios_base::binary);
 
-    _s8 file_buffer = new s8[file_size];
-    fscanf(file, "%s", file_buffer);
-    fclose(file);
+    if (file.fail())
+        throw std::runtime_error("filesystem: file_open error\n");
 
-    return file_buffer;
+    char *read_file_buffer = new s8[(u32)size_file];
+
+    file.read(read_file_buffer, (u32)size_file);
+    file.close();
+
+    return read_file_buffer;
 }
 
-static void filesystem::write_file(const _s8 filename, const _s8 buffer) {
-    FILE *file = fopen(filename, "wb");
+void filesystem::file_write(const fs::path file_path, const char *data) {
+    std::ofstream file(file_path, std::ios_base::binary);
 
-    fprinf(file, "%s", buffer);
-    fclose(file);
+    if (file.is_open()) {
+        file.write(data, strlen(data));
+        file.close();
+    }
+
+    else throw std::runtime_error("filesystem: file_open error\n");
 }
 
-static void filesystem::write_file_end(const _s8 filename, const _s8 buffer) {
-    FILE *file = fopen(filename, "ab");
-
-    fprintf(file, "%s", buffer);
-    fclose(file);
+fs::path filesystem::get_app_data() {
+    #ifdef WIN64
+        return getenv("APPDATA");
+    #else
+        return "/etc";
+    #endif // WIN64
 }
+
+fs::path filesystem::get_tmp() {
+    #ifdef WIN64
+        return getenv("TEMP");
+    #else
+        return "/tmp";
+    #endif // WIN64
+}
+
+void filesystem::file_remove(const fs::path file_path) { fs::remove(file_path); }
+void filesystem::file_copy(const fs::path file_path_src, const fs::path file_path_dst) { fs::copy(file_path_src, file_path_dst); }
+void filesystem::file_move(const fs::path file_path_src, const fs::path file_path_dst) { fs::copy(file_path_src, file_path_dst); fs::remove(file_path_src); }
+void filesystem::file_create(const fs::path file_path) { fs::create_directory(file_path); }
